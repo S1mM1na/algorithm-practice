@@ -1,103 +1,103 @@
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 public class Solution {
-    static int minLine;
+    static int[] dx={-1,1,0,0};
+    static int[] dy={0,0,-1,1};
     static int maxCore;
-    static int[] dr={1,0,-1,0};
-    static int[] dc={0,1,0,-1};
+    static int minLine;
+    static int N;
+    static int cnt;
     static int[][] map;
-    static int T,N;
-    static ArrayList<int[]> core=new ArrayList<>();
+    static int[][] core;
     public static void main(String[] args) throws IOException {
         BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
-        T=Integer.parseInt(br.readLine());
+        int T=Integer.parseInt(br.readLine());
 
         for(int tc=1; tc<=T; tc++){
             N=Integer.parseInt(br.readLine());
-            StringTokenizer st;
-            minLine=Integer.MAX_VALUE;
-            maxCore=Integer.MIN_VALUE;
             map=new int[N][N];
-            core=new ArrayList<>();
 
+            core=new int[13][2];
+            cnt=0;
             for(int i=0; i<N; i++){
-                st=new StringTokenizer(br.readLine());
+                StringTokenizer st=new StringTokenizer(br.readLine());
                 for(int j=0; j<N; j++){
                     map[i][j]=Integer.parseInt(st.nextToken());
                     if(map[i][j]==1){
-                        if(i==0||i==N-1||j==0||j==N-1){//가장 자리인 코어는 제외하고 넣음
+                        if(i==0||j==0||i==N-1||j==N-1){
                             continue;
                         }
-                       core.add(new int[]{i,j});
+                        core[cnt][0]=i;
+                        core[cnt][1]=j;
+                        cnt++;
                     }
                 }
             }
-            dfs(0,0,0);
-            System.out.println("#"+tc+" "+minLine);
+            maxCore=Integer.MIN_VALUE;
+            minLine=Integer.MAX_VALUE;
+
+            connect(0,0,0);
+			System.out.println("#"+tc+" "+minLine);
+
         }
     }
-
-    //dfs에서는 코어 하나의 상하좌우 노드 연결을 책임짐
-    private static void dfs(int index,int coreCount, int wireLength){
-
-        //모든 코어를 다 확인했다면
-        if(index==core.size()){
-            //연결한 코어가 더 많다면 갱신
-            if(coreCount>maxCore){
-                maxCore=coreCount;
-                minLine=wireLength;
+    static void connect(int idx,int coreCnt, int distance){
+        //종료조건
+        if(cnt==idx){
+            if(maxCore<coreCnt){
+                maxCore=coreCnt;
+                minLine=distance;
             }
-            //연결한 코어 수가 같다면?
-            else if (coreCount==maxCore) {
-                minLine=Math.min(minLine,wireLength);
-
+            if(maxCore==coreCnt){
+                minLine=Math.min(minLine,distance);
             }
             return;
         }
-        int r=core.get(index)[0];
-        int c=core.get(index)[1];
+        int x=core[idx][0];
+        int y=core[idx][1];
 
         for(int d=0; d<4; d++){
-            int nr=r+dr[d];
-            int nc=c+dc[d];
-            int length=0;
+            int nx=x+dx[d];
+            int ny=y+dy[d];
+            int len=0;
 
-            while(nr>=0&&nr<N&&nc>=0&&nc<N){
-                if(map[nr][nc]!=0){
+            while(nx>=0&&ny>=0&&nx<N&&ny<N){
+                if(map[nx][ny]!=0){
                     break;
                 }
-                nr+=dr[d];
-                nc+=dc[d];
-                length++;
+                nx+=dx[d];
+                ny+=dy[d];
+                len++;
             }
 
-            if(nr<0||nr>=N||nc<0||nc>=N){
-                nr=r+dr[d];
-                nc=c+dc[d];
+            if(nx<0||ny<0||nx>N-1||ny>N-1){
+                nx=x+dx[d];
+                ny=y+dy[d];
 
-                for(int i=0; i<length; i++){
-                    map[nr][nc]=2;
-                    nc+=dc[d];
-                    nr+=dr[d];
+                for(int i=0; i<len; i++){
+                    map[nx][ny]=2;
+                    nx+=dx[d];
+                    ny+=dy[d];
+
                 }
+                connect(idx+1,coreCnt+1,len+distance);
 
-                dfs(index+1,coreCount+1,wireLength+length);
+                nx=x+dx[d];
+                ny=y+dy[d];
 
-                nr=r+dr[d];
-                nc=c+dc[d];
+                for(int i=0; i<len; i++){
+                    map[nx][ny]=0;
+                    nx+=dx[d];
+                    ny+=dy[d];
 
-                for(int i=0; i<length; i++){
-                    map[nr][nc]=0;
-                    nr+=dr[d];
-                    nc+=dc[d];
                 }
             }
+
         }
-        dfs(index+1,coreCount,wireLength);
+        connect(idx+1,coreCnt,distance);
     }
-
 }
